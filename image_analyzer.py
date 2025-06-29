@@ -1,3 +1,4 @@
+
 import torch
 from transformers import BlipProcessor, BlipForConditionalGeneration, CLIPProcessor, CLIPModel
 from PIL import Image
@@ -11,7 +12,7 @@ import os
 
 # Import API clients
 try:
-    import openai
+    from openai import OpenAI
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
@@ -51,8 +52,7 @@ class ImageAnalyzer:
         self.openai_client = None
         if OPENAI_AVAILABLE and api_settings.get("openai_api_key"):
             try:
-                openai.api_key = api_settings["openai_api_key"]
-                self.openai_client = openai
+                self.openai_client = OpenAI(api_key=api_settings["openai_api_key"])
                 print("✅ OpenAI client initialized")
             except Exception as e:
                 print(f"❌ Error initializing OpenAI client: {e}")
@@ -131,8 +131,8 @@ class ImageAnalyzer:
             image.save(buffered, format="JPEG")
             img_str = base64.b64encode(buffered.getvalue()).decode()
             
-            response = self.openai_client.ChatCompletion.create(
-                model="gpt-4-vision-preview",
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "user",
@@ -163,8 +163,8 @@ class ImageAnalyzer:
             
             description = response.choices[0].message.content
             analysis["basic_description"] = description
-            analysis["analysis_provider"] = "openai_gpt4_vision"
-            print("✅ OpenAI GPT-4 Vision analysis completed")
+            analysis["analysis_provider"] = "openai_gpt4o_mini"
+            print("✅ OpenAI GPT-4o Mini Vision analysis completed")
             
         except Exception as e:
             print(f"❌ OpenAI analysis failed: {e}")
