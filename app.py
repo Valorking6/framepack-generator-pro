@@ -12,6 +12,25 @@ from image_analyzer import ImageAnalyzer
 from prompt_generator import PromptGenerator
 import pandas as pd
 
+# Suppress deprecation warnings for cleaner startup logs
+import warnings
+import re
+
+# Suppress torch.utils._pytree deprecation warnings from transformers
+warnings.filterwarnings("ignore", 
+                       category=FutureWarning, 
+                       message=re.escape("torch.utils._pytree._register_pytree_node is deprecated"))
+
+# Suppress resume_download deprecation warnings from huggingface_hub
+warnings.filterwarnings("ignore", 
+                       category=FutureWarning, 
+                       message=re.escape("resume_download is deprecated and will be removed in version 1.0.0"))
+
+# Suppress general transformers deprecation warnings
+warnings.filterwarnings("ignore", 
+                       category=FutureWarning, 
+                       module="transformers")
+
 class FramepackGeneratorPro:
     def __init__(self):
         self.settings = self.load_settings()
