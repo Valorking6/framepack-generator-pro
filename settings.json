@@ -4,6 +4,12 @@
     "device": "auto",
     "max_length": 50
   },
+  "api_settings": {
+    "provider": "blip",
+    "openai_api_key": "",
+    "google_api_key": "",
+    "fallback_enabled": true
+  },
   "generation_settings": {
     "default_duration": 30,
     "default_fps": 30,

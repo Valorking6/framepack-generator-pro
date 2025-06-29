@@ -4,15 +4,32 @@ from PIL import Image
 import cv2
 import numpy as np
 import json
-from typing import Dict, List, Tuple
+import base64
+import io
+from typing import Dict, List, Tuple, Optional
+import os
+
+# Import API clients
+try:
+    import openai
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+
+try:
+    import google.generativeai as genai
+    GOOGLE_AI_AVAILABLE = True
+except ImportError:
+    GOOGLE_AI_AVAILABLE = False
 
 class ImageAnalyzer:
-    def __init__(self):
-        """Initialize the image analyzer with BLIP and CLIP models"""
+    def __init__(self, settings: Dict = None):
+        """Initialize the image analyzer with BLIP and API models"""
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.settings = settings or {}
         print(f"Using device: {self.device}")
         
-        # Load BLIP model for image captioning
+        # Load BLIP model for image captioning (fallback)
         try:
             self.blip_processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
             self.blip_model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
@@ -22,10 +39,42 @@ class ImageAnalyzer:
             print(f"❌ Error loading BLIP model: {e}")
             self.blip_processor = None
             self.blip_model = None
+        
+        # Initialize API clients
+        self._init_api_clients()
+    
+    def _init_api_clients(self):
+        """Initialize OpenAI and Google AI clients"""
+        api_settings = self.settings.get("api_settings", {})
+        
+        # Initialize OpenAI client
+        self.openai_client = None
+        if OPENAI_AVAILABLE and api_settings.get("openai_api_key"):
+            try:
+                openai.api_key = api_settings["openai_api_key"]
+                self.openai_client = openai
+                print("✅ OpenAI client initialized")
+            except Exception as e:
+                print(f"❌ Error initializing OpenAI client: {e}")
+        
+        # Initialize Google AI client
+        self.google_client = None
+        if GOOGLE_AI_AVAILABLE and api_settings.get("google_api_key"):
+            try:
+                genai.configure(api_key=api_settings["google_api_key"])
+                self.google_client = genai.GenerativeModel('gemini-1.5-flash')
+                print("✅ Google AI client initialized")
+            except Exception as e:
+                print(f"❌ Error initializing Google AI client: {e}")
+    
+    def update_settings(self, settings: Dict):
+        """Update settings and reinitialize API clients"""
+        self.settings = settings
+        self._init_api_clients()
     
     def analyze_image(self, image: Image.Image) -> Dict:
         """
-        Comprehensive image analysis including scene, subject, lighting, and composition
+        Comprehensive image analysis using selected API provider with fallback
         """
         if image is None:
             raise ValueError("No image provided for analysis")
@@ -41,35 +90,136 @@ class ImageAnalyzer:
             "lighting_analysis": {},
             "composition_analysis": {},
             "color_analysis": {},
-            "technical_details": {}
+            "technical_details": {},
+            "analysis_provider": "unknown"
         }
         
         try:
-            # Basic description using BLIP
-            analysis["basic_description"] = self._get_basic_description(image)
+            # Get provider preference
+            provider = self.settings.get("api_settings", {}).get("provider", "blip")
             
-            # Scene and environment analysis
+            # Try selected provider first
+            if provider == "openai" and self.openai_client:
+                analysis = self._analyze_with_openai(image, analysis)
+            elif provider == "google" and self.google_client:
+                analysis = self._analyze_with_google(image, analysis)
+            else:
+                # Fallback to BLIP or try other providers
+                analysis = self._analyze_with_fallback(image, analysis, provider)
+            
+            # Always add technical analysis and other computer vision features
             analysis["scene_details"] = self._analyze_scene(image)
-            
-            # Subject detection and analysis
             analysis["subject_analysis"] = self._analyze_subject(image)
-            
-            # Lighting analysis
             analysis["lighting_analysis"] = self._analyze_lighting(image)
-            
-            # Composition analysis
             analysis["composition_analysis"] = self._analyze_composition(image)
-            
-            # Color analysis
             analysis["color_analysis"] = self._analyze_colors(image)
-            
-            # Technical details
             analysis["technical_details"] = self._get_technical_details(image)
             
         except Exception as e:
             print(f"Error in image analysis: {e}")
             analysis["basic_description"] = "A scene with various elements"
             analysis["scene_details"] = {"setting": "unknown", "environment": "indoor"}
+            analysis["analysis_provider"] = "error_fallback"
+        
+        return analysis
+    
+    def _analyze_with_openai(self, image: Image.Image, analysis: Dict) -> Dict:
+        """Analyze image using OpenAI GPT-4 Vision"""
+        try:
+            # Convert image to base64
+            buffered = io.BytesIO()
+            image.save(buffered, format="JPEG")
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+            
+            response = self.openai_client.ChatCompletion.create(
+                model="gpt-4-vision-preview",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": """Analyze this image in detail. Provide a comprehensive description including:
+                                1. Basic scene description
+                                2. Main subjects and their positions
+                                3. Lighting conditions and mood
+                                4. Composition and framing
+                                5. Colors and visual style
+                                6. Any notable activities or expressions
+                                
+                                Format your response as a detailed paragraph."""
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{img_str}"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                max_tokens=500
+            )
+            
+            description = response.choices[0].message.content
+            analysis["basic_description"] = description
+            analysis["analysis_provider"] = "openai_gpt4_vision"
+            print("✅ OpenAI GPT-4 Vision analysis completed")
+            
+        except Exception as e:
+            print(f"❌ OpenAI analysis failed: {e}")
+            raise e
+        
+        return analysis
+    
+    def _analyze_with_google(self, image: Image.Image, analysis: Dict) -> Dict:
+        """Analyze image using Google Gemini Vision"""
+        try:
+            prompt = """Analyze this image in detail. Provide a comprehensive description including:
+            1. Basic scene description
+            2. Main subjects and their positions  
+            3. Lighting conditions and mood
+            4. Composition and framing
+            5. Colors and visual style
+            6. Any notable activities or expressions
+            
+            Format your response as a detailed paragraph."""
+            
+            response = self.google_client.generate_content([prompt, image])
+            
+            description = response.text
+            analysis["basic_description"] = description
+            analysis["analysis_provider"] = "google_gemini_vision"
+            print("✅ Google Gemini Vision analysis completed")
+            
+        except Exception as e:
+            print(f"❌ Google AI analysis failed: {e}")
+            raise e
+        
+        return analysis
+    
+    def _analyze_with_fallback(self, image: Image.Image, analysis: Dict, preferred_provider: str) -> Dict:
+        """Try fallback providers or BLIP if APIs fail"""
+        fallback_enabled = self.settings.get("api_settings", {}).get("fallback_enabled", True)
+        
+        if fallback_enabled:
+            # Try other API providers first
+            if preferred_provider != "openai" and self.openai_client:
+                try:
+                    return self._analyze_with_openai(image, analysis)
+                except Exception as e:
+                    print(f"OpenAI fallback failed: {e}")
+            
+            if preferred_provider != "google" and self.google_client:
+                try:
+                    return self._analyze_with_google(image, analysis)
+                except Exception as e:
+                    print(f"Google AI fallback failed: {e}")
+        
+        # Final fallback to BLIP
+        analysis["basic_description"] = self._get_basic_description(image)
+        analysis["analysis_provider"] = "blip_local"
+        print("✅ Using BLIP local analysis as fallback")
         
         return analysis
     

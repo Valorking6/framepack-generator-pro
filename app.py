@@ -13,32 +13,92 @@ import pandas as pd
 
 class FramepackGeneratorPro:
     def __init__(self):
-        self.image_analyzer = ImageAnalyzer()
-        self.prompt_generator = PromptGenerator()
         self.settings = self.load_settings()
+        self.image_analyzer = ImageAnalyzer(self.settings)
+        self.prompt_generator = PromptGenerator()
         
     def load_settings(self):
         """Load application settings"""
         default_settings = {
-            "default_duration": 30,
-            "default_fps": 30,
-            "model_name": "Salesforce/blip-image-captioning-base",
-            "output_format": "both"
+            "model_settings": {
+                "blip_model": "Salesforce/blip-image-captioning-base",
+                "device": "auto",
+                "max_length": 50
+            },
+            "api_settings": {
+                "provider": "blip",
+                "openai_api_key": "",
+                "google_api_key": "",
+                "fallback_enabled": True
+            },
+            "generation_settings": {
+                "default_duration": 30,
+                "default_fps": 30,
+                "min_duration": 5,
+                "max_duration": 120
+            },
+            "output_settings": {
+                "default_format": "both",
+                "export_formats": ["json", "txt", "csv"],
+                "auto_save": True
+            },
+            "ui_settings": {
+                "theme": "default",
+                "show_advanced": False,
+                "auto_analyze": True
+            },
+            "file_settings": {
+                "max_history_files": 100,
+                "max_export_files": 50,
+                "auto_cleanup": True
+            }
         }
         
         if os.path.exists("settings.json"):
             try:
                 with open("settings.json", "r") as f:
-                    settings = json.load(f)
-                    return {**default_settings, **settings}
-            except:
-                pass
+                    loaded_settings = json.load(f)
+                    # Merge with defaults to ensure all keys exist
+                    for key, value in default_settings.items():
+                        if key not in loaded_settings:
+                            loaded_settings[key] = value
+                        elif isinstance(value, dict):
+                            for subkey, subvalue in value.items():
+                                if subkey not in loaded_settings[key]:
+                                    loaded_settings[key][subkey] = subvalue
+                    return loaded_settings
+            except Exception as e:
+                print(f"Error loading settings: {e}")
         return default_settings
     
     def save_settings(self, settings):
         """Save application settings"""
         with open("settings.json", "w") as f:
             json.dump(settings, f, indent=2)
+        # Update image analyzer with new settings
+        self.settings = settings
+        self.image_analyzer.update_settings(settings)
+    
+    def update_api_settings(self, provider, openai_key, google_key, fallback_enabled):
+        """Update API settings and reinitialize analyzers"""
+        self.settings["api_settings"]["provider"] = provider
+        self.settings["api_settings"]["openai_api_key"] = openai_key
+        self.settings["api_settings"]["google_api_key"] = google_key
+        self.settings["api_settings"]["fallback_enabled"] = fallback_enabled
+        
+        self.save_settings(self.settings)
+        
+        # Validate API keys
+        status_messages = []
+        if provider == "openai" and not openai_key:
+            status_messages.append("⚠️ OpenAI API key is required for OpenAI provider")
+        elif provider == "google" and not google_key:
+            status_messages.append("⚠️ Google AI API key is required for Google AI provider")
+        
+        if not status_messages:
+            status_messages.append("✅ API settings updated successfully!")
+        
+        return "\n".join(status_messages)
     
     def generate_video_prompt(self, image, duration, custom_action, output_format):
         """Main function to generate video prompts from uploaded image"""
@@ -54,15 +114,18 @@ class FramepackGeneratorPro:
                 analysis, duration, custom_action
             )
             
+            # Add provider info to output
+            provider_info = f"**Analysis Provider:** {analysis.get('analysis_provider', 'unknown')}\n\n"
+            
             # Format output based on user preference
             if output_format == "Timestamp Only":
-                display_output = f"**Timestamp Format:**\n{timestamp_prompt}"
+                display_output = f"{provider_info}**Timestamp Format:**\n{timestamp_prompt}"
                 export_data = {"timestamp": timestamp_prompt, "hunyuan": ""}
             elif output_format == "Hunyuan Only":
-                display_output = f"**Hunyuan Format:**\n{hunyuan_prompt}"
+                display_output = f"{provider_info}**Hunyuan Format:**\n{hunyuan_prompt}"
                 export_data = {"timestamp": "", "hunyuan": hunyuan_prompt}
             else:  # Both
-                display_output = f"**Timestamp Format:**\n{timestamp_prompt}\n\n**Hunyuan Format:**\n{hunyuan_prompt}"
+                display_output = f"{provider_info}**Timestamp Format:**\n{timestamp_prompt}\n\n**Hunyuan Format:**\n{hunyuan_prompt}"
                 export_data = {"timestamp": timestamp_prompt, "hunyuan": hunyuan_prompt}
             
             # Save to history
@@ -84,7 +147,7 @@ class FramepackGeneratorPro:
             "timestamp": datetime.now().isoformat(),
             "timestamp_prompt": data["timestamp"],
             "hunyuan_prompt": data["hunyuan"],
-            "generator": "Framepack Generator Pro v1.0"
+            "generator": "Framepack Generator Pro v1.1"
         }
         
         with open(filename, "w") as f:
@@ -139,12 +202,14 @@ class FramepackGeneratorPro:
                 
                 results.append({
                     "filename": os.path.basename(file_obj.name),
+                    "analysis_provider": analysis.get('analysis_provider', 'unknown'),
                     "timestamp_prompt": timestamp_prompt,
                     "hunyuan_prompt": hunyuan_prompt
                 })
             except Exception as e:
                 results.append({
                     "filename": os.path.basename(file_obj.name),
+                    "analysis_provider": "error",
                     "timestamp_prompt": f"Error: {str(e)}",
                     "hunyuan_prompt": f"Error: {str(e)}"
                 })
@@ -157,7 +222,7 @@ class FramepackGeneratorPro:
         
         summary = f"Processed {len(results)} images successfully.\n\n"
         for result in results[:5]:  # Show first 5 results
-            summary += f"**{result['filename']}:**\n{result['timestamp_prompt'][:100]}...\n\n"
+            summary += f"**{result['filename']}** ({result['analysis_provider']}):  \n{result['timestamp_prompt'][:100]}...\n\n"
         
         if len(results) > 5:
             summary += f"... and {len(results) - 5} more images."
@@ -188,6 +253,13 @@ def create_interface():
         border-left: 4px solid #667eea;
         margin: 1rem 0;
     }
+    .api-box {
+        background: #e8f4fd;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid #0066cc;
+        margin: 1rem 0;
+    }
     .status-success {
         color: #28a745;
         font-weight: bold;
@@ -202,8 +274,8 @@ def create_interface():
         gr.HTML("""
         <div class="header">
             <h1>🎬 Framepack Generator Pro</h1>
-            <p>AI-Powered Video Prompt Generator for Hunyuan Video Creation</p>
-            <p>Transform your images into professional video prompts with precise timing and dynamic camera work</p>
+            <p>AI-Powered Video Prompt Generator with Multi-Provider Support</p>
+            <p>Transform your images into professional video prompts using OpenAI GPT-4 Vision, Google Gemini Vision, or local BLIP analysis</p>
         </div>
         """)
         
@@ -313,15 +385,53 @@ def create_interface():
                 
                 with gr.Row():
                     with gr.Column():
+                        # API Provider Settings
+                        gr.HTML('<div class="api-box"><h4>🤖 AI Provider Settings</h4></div>')
+                        
+                        api_provider = gr.Radio(
+                            choices=["blip", "openai", "google"],
+                            value=app.settings["api_settings"]["provider"],
+                            label="AI Analysis Provider",
+                            info="Choose your preferred AI provider for image analysis"
+                        )
+                        
+                        openai_api_key = gr.Textbox(
+                            label="OpenAI API Key",
+                            type="password",
+                            placeholder="sk-...",
+                            value=app.settings["api_settings"]["openai_api_key"],
+                            info="Required for OpenAI GPT-4 Vision analysis"
+                        )
+                        
+                        google_api_key = gr.Textbox(
+                            label="Google AI Studio API Key",
+                            type="password",
+                            placeholder="AI...",
+                            value=app.settings["api_settings"]["google_api_key"],
+                            info="Get your key at: https://aistudio.google.com/apikey"
+                        )
+                        
+                        fallback_enabled = gr.Checkbox(
+                            label="Enable API Fallback",
+                            value=app.settings["api_settings"]["fallback_enabled"],
+                            info="Automatically try other providers if the selected one fails"
+                        )
+                        
+                        save_api_btn = gr.Button("💾 Save API Settings", variant="primary")
+                        api_status = gr.HTML()
+                        
+                        # General Settings
+                        gr.HTML('<div class="feature-box"><h4>📊 General Settings</h4></div>')
+                        
                         settings_duration = gr.Slider(
                             minimum=5,
                             maximum=120,
-                            value=app.settings["default_duration"],
+                            value=app.settings["generation_settings"]["default_duration"],
                             label="Default Duration (seconds)"
                         )
                         
                         settings_fps = gr.Number(
-                            value=app.settings["default_fps"],
+                            value=app.settings["generation_settings"]["default_fps"],
                             label="Default FPS"
                         )
                         
@@ -330,39 +440,74 @@ def create_interface():
                                 "Salesforce/blip-image-captioning-base",
                                 "Salesforce/blip-image-captioning-large"
                             ],
-                            value=app.settings["model_name"],
-                            label="BLIP Model"
+                            value=app.settings["model_settings"]["blip_model"],
+                            label="BLIP Model (Fallback)"
                         )
                         
-                        save_settings_btn = gr.Button("💾 Save Settings")
+                        save_general_btn = gr.Button("💾 Save General Settings")
+                        general_status = gr.HTML()
                     
                     with gr.Column():
                         gr.HTML("""
+                        <div class="api-box">
+                            <h4>🔑 API Key Setup Instructions</h4>
+                            
+                            <h5>OpenAI API Key:</h5>
+                            <ol>
+                                <li>Visit <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI API Keys</a></li>
+                                <li>Sign in to your OpenAI account</li>
+                                <li>Click "Create new secret key"</li>
+                                <li>Copy the key (starts with "sk-")</li>
+                                <li>Paste it in the OpenAI API Key field above</li>
+                            </ol>
+                            
+                            <h5>Google AI Studio API Key:</h5>
+                            <ol>
+                                <li>Visit <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a></li>
+                                <li>Sign in with your Google account</li>
+                                <li>Click "Create API Key"</li>
+                                <li>Copy the generated key</li>
+                                <li>Paste it in the Google AI API Key field above</li>
+                            </ol>
+                            
+                            <p><strong>Note:</strong> API keys are stored locally and used only for image analysis. Keep them secure!</p>
+                        </div>
+                        """)
+                        
+                        gr.HTML("""
                         <div class="feature-box">
                             <h4>📊 Application Info</h4>
-                            <p><strong>Version:</strong> 1.0.0</p>
-                            <p><strong>Model:</strong> BLIP + Custom Analysis</p>
+                            <p><strong>Version:</strong> 1.1.0</p>
+                            <p><strong>Providers:</strong> OpenAI GPT-4 Vision, Google Gemini Vision, BLIP Local</p>
                             <p><strong>Supported Formats:</strong> JPG, PNG, WebP</p>
                             <p><strong>Max Duration:</strong> 120 seconds</p>
                             <p><strong>Output Formats:</strong> Timestamp, Hunyuan</p>
+                            <p><strong>Fallback:</strong> Automatic provider switching</p>
                         </div>
                         """)
                 
-                def save_settings_fn(duration, fps, model):
-                    new_settings = {
-                        "default_duration": duration,
-                        "default_fps": fps,
-                        "model_name": model,
-                        "output_format": "both"
-                    }
-                    app.save_settings(new_settings)
-                    app.settings = new_settings
-                    return "✅ Settings saved successfully!"
+                # API Settings Save Function
+                def save_api_settings_fn(provider, openai_key, google_key, fallback):
+                    return app.update_api_settings(provider, openai_key, google_key, fallback)
                 
-                save_settings_btn.click(
-                    fn=save_settings_fn,
+                save_api_btn.click(
+                    fn=save_api_settings_fn,
+                    inputs=[api_provider, openai_api_key, google_api_key, fallback_enabled],
+                    outputs=[api_status]
+                )
+                
+                # General Settings Save Function
+                def save_general_settings_fn(duration, fps, model):
+                    app.settings["generation_settings"]["default_duration"] = duration
+                    app.settings["generation_settings"]["default_fps"] = fps
+                    app.settings["model_settings"]["blip_model"] = model
+                    app.save_settings(app.settings)
+                    return "✅ General settings saved successfully!"
+                
+                save_general_btn.click(
+                    fn=save_general_settings_fn,
                     inputs=[settings_duration, settings_fps, settings_model],
-                    outputs=[gr.HTML()]
+                    outputs=[general_status]
                 )
             
             # Help Tab
@@ -371,7 +516,15 @@ def create_interface():
                 <div class="feature-box">
                     <h3>🎯 How to Use Framepack Generator Pro</h3>
                     
-                    <h4>1. Generate Single Prompt:</h4>
+                    <h4>1. Setup API Keys (Recommended):</h4>
+                    <ul>
+                        <li>Go to the "Settings" tab</li>
+                        <li>Choose your preferred AI provider (OpenAI or Google AI)</li>
+                        <li>Enter your API key following the setup instructions</li>
+                        <li>Enable fallback for automatic provider switching</li>
+                    </ul>
+                    
+                    <h4>2. Generate Single Prompt:</h4>
                     <ul>
                         <li>Upload an image in the "Generate Prompt" tab</li>
                         <li>Adjust duration slider (5-120 seconds)</li>
@@ -379,7 +532,7 @@ def create_interface():
                         <li>Choose output format and click "Generate Video Prompt"</li>
                     </ul>
                     
-                    <h4>2. Batch Processing:</h4>
+                    <h4>3. Batch Processing:</h4>
                     <ul>
                         <li>Go to "Batch Processing" tab</li>
                         <li>Upload multiple images</li>
@@ -387,18 +540,35 @@ def create_interface():
                         <li>Download results as CSV file</li>
                     </ul>
                     
-                    <h4>3. Output Formats:</h4>
+                    <h4>4. AI Provider Comparison:</h4>
+                    <ul>
+                        <li><strong>OpenAI GPT-4 Vision:</strong> Excellent detail and context understanding</li>
+                        <li><strong>Google Gemini Vision:</strong> Fast processing and good multimodal reasoning</li>
+                        <li><strong>BLIP Local:</strong> Free, works offline, basic but reliable descriptions</li>
+                    </ul>
+                    
+                    <h4>5. Output Formats:</h4>
                     <ul>
                         <li><strong>Timestamp Format:</strong> [1s: action] [3s: action] format for precise timing</li>
                         <li><strong>Hunyuan Format:</strong> Detailed narrative descriptions for fluid motion</li>
                     </ul>
                     
-                    <h4>4. Tips for Best Results:</h4>
+                    <h4>6. Tips for Best Results:</h4>
                     <ul>
                         <li>Use high-quality, well-lit images</li>
                         <li>Clear subject focus works best</li>
+                        <li>API providers give more detailed and creative descriptions</li>
                         <li>Longer durations create more complex sequences</li>
                         <li>Custom actions help personalize the video flow</li>
+                        <li>Enable fallback to ensure analysis always succeeds</li>
+                    </ul>
+                    
+                    <h4>7. Troubleshooting:</h4>
+                    <ul>
+                        <li>If API analysis fails, check your API keys in Settings</li>
+                        <li>Fallback will automatically use BLIP if APIs are unavailable</li>
+                        <li>Large images may take longer to process</li>
+                        <li>Check the analysis provider shown in results</li>
                     </ul>
                 </div>
                 """)

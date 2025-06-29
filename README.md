@@ -1,234 +1,149 @@
 # 🎬 Framepack Generator Pro
 
-**AI-Powered Video Prompt Generator for Hunyuan Video Creation**
+**AI-Powered Video Prompt Generator with Multi-Provider Support**
 
-Framepack Generator Pro is a sophisticated AI tool that analyzes uploaded images and generates optimized video prompts specifically designed for framepack and Hunyuan AI video generation platforms. Perfect for content creators, influencers, and digital marketers looking to streamline their video content production workflow with professional-grade prompts.
+Transform your images into professional video prompts using cutting-edge AI vision models including OpenAI GPT-4 Vision, Google Gemini Vision, and local BLIP analysis.
 
-## ✨ Key Features
+![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
+![Python](https://img.shields.io/badge/python-3.8%2B-green.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-### 🧠 Advanced AI Analysis
-- **BLIP Model Integration**: State-of-the-art image captioning using Salesforce's BLIP model
-- **Computer Vision Processing**: OpenCV-powered scene, lighting, and composition analysis
-- **Intelligent Subject Detection**: Automatic identification of poses, clothing, and positioning
-- **Color Psychology Analysis**: Mood and atmosphere detection from color palettes
+## ✨ Features
 
-### ⏱️ Precision Timing Control
-- **Timestamp Format**: Generate precise `[1s: action] [3s: action]` format prompts
-- **Dynamic Duration Scaling**: 5-120 second sequences with intelligent complexity scaling
-- **Custom Action Integration**: Seamlessly incorporate user-defined actions into sequences
-- **Professional Camera Work**: Varied shots, movements, and cinematic effects
+### 🤖 Multi-Provider AI Support
+- **OpenAI GPT-4 Vision**: Industry-leading image understanding with exceptional detail and context awareness
+- **Google Gemini Vision**: Fast, efficient multimodal AI with excellent reasoning capabilities
+- **BLIP Local**: Free, offline image captioning that works without API keys
+- **Intelligent Fallback**: Automatic provider switching ensures analysis always succeeds
 
-### 🎥 Dual Output Formats
-- **Timestamp Format**: Perfect for framepack tools requiring precise timing markers
-- **Hunyuan Format**: Detailed narrative descriptions for fluid, natural motion
-- **Flexible Export**: Choose individual formats or export both simultaneously
+### 🎯 Advanced Video Prompt Generation
+- **Dual Output Formats**: Generate both timestamp-based and narrative-style prompts
+- **Customizable Duration**: Support for 5-120 second video sequences
+- **Custom Actions**: Incorporate specific actions and movements into generated prompts
+- **Professional Analysis**: Comprehensive scene, lighting, composition, and color analysis
 
-### 🚀 Performance & Efficiency
-- **CUDA 12.8 Support**: Optimized for latest NVIDIA GPUs with fallback to CPU
-- **Batch Processing**: Handle multiple images simultaneously for workflow efficiency
-- **Smart Caching**: Intelligent model loading and memory management
-- **Export Options**: JSON, TXT, and CSV formats for various workflows
+### 🔄 Batch Processing
+- Process multiple images simultaneously
+- CSV export for bulk results
+- Efficient workflow for content creators
 
-### 🎨 Professional Interface
-- **Gradio Web UI**: Clean, intuitive browser-based interface
-- **Real-time Preview**: Instant prompt generation and preview
-- **Progress Tracking**: Visual feedback for batch operations
-- **Responsive Design**: Works seamlessly across devices
+### ⚙️ Professional Interface
+- Modern, responsive Gradio web interface
+- Real-time provider status and feedback
+- Comprehensive settings management
+- Built-in help and documentation
 
-## 🚀 Quick Start Guide
+## 🚀 Quick Start
 
-### System Requirements
-- **Python**: 3.8 or higher
-- **Memory**: 4GB+ RAM recommended (8GB+ for batch processing)
-- **GPU**: NVIDIA GPU with CUDA 12.8 support (optional, CPU mode available)
-- **Storage**: 2GB+ free space for models and dependencies
+### Prerequisites
+- Python 3.8 or higher
+- CUDA-compatible GPU (optional, for faster local processing)
 
-### Windows Installation
+### Installation
 
-1. **Download** the latest release or clone the repository
-2. **Run installer** as Administrator:
-   ```powershell
-   .\install.ps1
-   ```
-3. **Launch application**:
-   ```batch
-   run.bat
-   ```
-
-### Linux/macOS Installation
-
-1. **Clone repository**:
+1. **Clone the repository**
    ```bash
    git clone https://github.com/Valorking6/framepack-generator-pro.git
    cd framepack-generator-pro
    ```
 
-2. **Run installer**:
+2. **Create virtual environment**
    ```bash
-   chmod +x install.sh
-   ./install.sh
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-3. **Launch application**:
+3. **Install dependencies**
    ```bash
-   ./run.sh
+   pip install -r requirements.txt
    ```
 
-### Manual Installation
+4. **Launch the application**
+   ```bash
+   python app.py
+   ```
 
-```bash
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+5. **Open your browser**
+   Navigate to `http://127.0.0.1:7861`
 
-# Install PyTorch with CUDA 12.8 (if GPU available)
-pip install --pre torch==2.8.0.dev20250324+cu128 torchvision==0.22.0.dev20250325+cu128 torchaudio==2.6.0.dev20250325+cu128 --index-url https://download.pytorch.org/whl/nightly/cu128
+## 🔑 API Setup
 
-# Install dependencies
-pip install -r requirements.txt
+### OpenAI API Key
+1. Visit [OpenAI API Keys](https://platform.openai.com/api-keys)
+2. Sign in to your OpenAI account
+3. Click "Create new secret key"
+4. Copy the key (starts with "sk-")
+5. Enter it in the Settings tab
 
-# Launch application
-python app.py
+### Google AI Studio API Key
+1. Visit [Google AI Studio](https://aistudio.google.com/apikey)
+2. Sign in with your Google account
+3. Click "Create API Key"
+4. Copy the generated key
+5. Enter it in the Settings tab
+
+**Note**: API keys are stored locally and used only for image analysis. Keep them secure!
+
+## 📖 Usage Guide
+
+### Basic Usage
+
+1. **Setup Provider** (Optional but recommended)
+   - Go to Settings tab
+   - Choose your preferred AI provider
+   - Enter your API key
+   - Enable fallback for reliability
+
+2. **Generate Single Prompt**
+   - Upload an image (JPG, PNG, WebP)
+   - Adjust duration slider (5-120 seconds)
+   - Add custom actions if desired
+   - Choose output format
+   - Click "Generate Video Prompt"
+
+3. **Batch Processing**
+   - Go to Batch Processing tab
+   - Upload multiple images
+   - Click "Process Batch"
+   - Download CSV results
+
+### Output Formats
+
+#### Timestamp Format
+Precise timing for video editing:
+```
+[1s: Subject stands confidently in the center]
+[3s: Camera slowly zooms in on their face]
+[5s: Subject begins to smile warmly]
+[8s: Gentle head tilt to the right]
+[10s: Eyes look directly at camera]
 ```
 
-## 📖 Comprehensive Usage Guide
-
-### 1. Single Image Processing
-
-1. **Upload Image**: Drag and drop or click to upload (JPG, PNG, WebP, BMP, TIFF)
-2. **Configure Settings**:
-   - **Duration**: Adjust slider from 5-120 seconds
-   - **Custom Action**: Add specific actions like "waves hello" or "starts dancing"
-   - **Output Format**: Choose Timestamp, Hunyuan, or Both
-3. **Generate**: Click "Generate Video Prompt" for instant results
-4. **Export**: Download prompts in your preferred format
-
-### 2. Batch Processing Workflow
-
-1. Navigate to **"Batch Processing"** tab
-2. **Upload Multiple Images**: Select multiple files simultaneously
-3. **Process Batch**: Click to generate prompts for all images
-4. **Download Results**: Export comprehensive CSV with all generated prompts
-
-### 3. Understanding Output Formats
-
-#### Timestamp Format Example
+#### Hunyuan Format
+Narrative description for fluid motion:
 ```
-[0s: Wide shot of subject in garden, shallow depth of field]; 
-[2s: Dolly in smoothly as subject raises hand to wave]; 
-[4s: Quick pan right with motion blur as subject walks]; 
-[6s: Pull focus to flowers in foreground while tracking subject]; 
-[8s: Close-up shot with bokeh effect as subject smiles warmly]
+A confident person stands in the center of the frame, their posture relaxed yet assured. As the camera slowly draws closer, capturing the subtle details of their expression, a warm smile begins to form. The subject's head tilts gently, creating a more intimate connection with the viewer...
 ```
 
-#### Hunyuan Format Example
-```
-The camera opens with a brightly lit garden with natural tones, creating an inviting outdoor atmosphere. The subject, wearing casual blue clothing, is positioned center frame in a medium composition stands gracefully in the frame. The camera smoothly transitions, adopting a medium shot while executing a dolly in, capturing as the subject raises hand to wave with natural grace and authentic expression. With fluid movement, the camera shifts to close-up with quick pan right, following the subject's walk in a way that feels organic and unforced...
-```
+## 🎨 AI Provider Comparison
 
-### 4. Advanced Configuration
+| Provider | Strengths | Best For | Cost |
+|----------|-----------|----------|---------|
+| **OpenAI GPT-4 Vision** | Exceptional detail, context understanding, creative descriptions | Professional content, detailed analysis | Paid API |
+| **Google Gemini Vision** | Fast processing, good multimodal reasoning, reliable | Quick workflows, batch processing | Paid API |
+| **BLIP Local** | Free, offline, privacy-focused, reliable | Basic descriptions, no API costs | Free |
 
-#### Model Settings
-- **BLIP Model**: Choose between base and large models
-- **Device Selection**: Auto-detect GPU or force CPU mode
-- **Max Length**: Configure caption length limits
+## 🛠️ Configuration
 
-#### Generation Settings
-- **Default Duration**: Set preferred video length
-- **FPS Configuration**: Adjust frame rate (default: 30fps)
-- **Quality Presets**: Choose between speed and quality
-
-#### Export Settings
-- **Auto-save**: Enable automatic prompt saving
-- **Format Preferences**: Set default export formats
-- **File Management**: Configure cleanup and organization
-
-## 🛠️ Technical Architecture
-
-### Core Components
-
-- **`app.py`**: Main Gradio interface and application orchestration
-- **`image_analyzer.py`**: Advanced image analysis using BLIP and OpenCV
-- **`prompt_generator.py`**: Intelligent prompt generation with timing algorithms
-- **`utils.py`**: File management, configuration, and utility functions
-
-### AI Models & Technologies
-
-- **BLIP (Salesforce)**: Image captioning and scene understanding
-- **OpenCV**: Computer vision for technical analysis
-- **scikit-learn**: Color clustering and pattern recognition
-- **Custom Algorithms**: Camera movement optimization and timing calculation
-
-### Supported Formats
-
-| Category | Formats |
-|----------|----------|
-| **Input Images** | JPG, JPEG, PNG, WebP, BMP, TIFF |
-| **Output Files** | JSON, TXT, CSV |
-| **Video Duration** | 5-120 seconds |
-| **Timing Precision** | 1-second intervals |
-
-## 📁 Project Structure
-
-```
-framepack-generator-pro/
-├── 📄 app.py                 # Main application entry point
-├── 🧠 image_analyzer.py      # AI-powered image analysis
-├── ✍️ prompt_generator.py     # Intelligent prompt generation
-├── 🔧 utils.py              # Utility functions and helpers
-├── 📋 requirements.txt      # Python dependencies
-├── ⚙️ settings.json         # Application configuration
-├── 🪟 install.ps1          # Windows installation script
-├── 🐧 install.sh           # Linux/macOS installation script
-├── 🪟 run.bat              # Windows launcher
-├── 📝 README.md            # This documentation
-├── 📂 generated_prompts/   # Output directory for prompts
-├── 📂 history/             # Generation history and logs
-├── 📂 uploads/             # Temporary file storage
-└── 📂 venv/                # Virtual environment (created during install)
-```
-
-## 🎯 Use Cases & Applications
-
-### Content Creators
-- **Social Media**: Generate engaging video concepts from photos
-- **YouTube**: Create professional video sequences for tutorials and vlogs
-- **TikTok**: Develop trending video ideas with precise timing
-- **Instagram**: Transform static posts into dynamic video content
-
-### Digital Marketing
-- **Product Videos**: Convert product photos into compelling video narratives
-- **Brand Content**: Maintain consistent visual storytelling across campaigns
-- **Advertisement**: Create professional video concepts for marketing materials
-- **E-commerce**: Generate product demonstration video prompts
-
-### Film & Video Production
-- **Pre-visualization**: Rapid prototyping of video sequences
-- **Storyboarding**: AI-assisted storyboard development
-- **Creative Direction**: Generate inspiration for camera work and movement
-- **Client Presentations**: Quick concept visualization for pitches
-
-### Education & Training
-- **Film Studies**: Teach cinematography concepts through AI analysis
-- **Content Creation Courses**: Demonstrate professional video planning
-- **Marketing Education**: Show video content strategy development
-
-## ⚙️ Configuration & Customization
-
-### Model Configuration
+### Settings File Structure
 ```json
 {
-  "model_settings": {
-    "blip_model": "Salesforce/blip-image-captioning-base",
-    "device": "auto",
-    "max_length": 50
-  }
-}
-```
-
-### Generation Parameters
-```json
-{
+  "api_settings": {
+    "provider": "openai",
+    "openai_api_key": "your-key-here",
+    "google_api_key": "your-key-here",
+    "fallback_enabled": true
+  },
   "generation_settings": {
     "default_duration": 30,
     "default_fps": 30,
@@ -238,221 +153,150 @@ framepack-generator-pro/
 }
 ```
 
-### Output Preferences
-```json
-{
-  "output_settings": {
-    "default_format": "both",
-    "export_formats": ["json", "txt", "csv"],
-    "auto_save": true
-  }
-}
-```
-
-## 🔧 Troubleshooting & Support
-
-### Common Issues & Solutions
-
-#### Installation Problems
-
-**Windows PowerShell Execution Policy**:
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
-**Python Version Conflicts**:
-- Ensure Python 3.8+ is installed
-- Use `python --version` to verify
-- Consider using `python3` command on Linux/macOS
-
-**CUDA Installation Issues**:
-- Verify NVIDIA drivers: `nvidia-smi`
-- Check CUDA compatibility with your GPU
-- Application automatically falls back to CPU mode
-
-#### Runtime Issues
-
-**Memory Errors**:
-- Reduce batch size for large image sets
-- Use smaller images (recommended: 1024x1024 max)
-- Close other memory-intensive applications
-- Consider upgrading RAM for heavy usage
-
-**Model Loading Failures**:
-- Check internet connection for initial model download
-- Verify sufficient disk space (2GB+ required)
-- Clear cache and restart application
-
-**Import Errors**:
+### Environment Variables (Optional)
 ```bash
-# Reinstall dependencies
-pip install -r requirements.txt --force-reinstall
-
-# Verify virtual environment activation
-source venv/bin/activate  # Linux/macOS
-venv\Scripts\activate     # Windows
+OPENAI_API_KEY=your-openai-key
+GOOGLE_API_KEY=your-google-key
 ```
 
-### Performance Optimization
+## 📁 Project Structure
 
-#### GPU Optimization
-- **CUDA Memory**: Monitor GPU memory usage with `nvidia-smi`
-- **Batch Size**: Adjust based on available VRAM
-- **Model Selection**: Use base model for faster processing, large for quality
+```
+framepack-generator-pro/
+├── app.py                 # Main Gradio application
+├── image_analyzer.py      # Multi-provider image analysis
+├── prompt_generator.py    # Video prompt generation logic
+├── utils.py              # Utility functions
+├── settings.json         # Application configuration
+├── requirements.txt      # Python dependencies
+├── README.md            # This file
+├── generated_prompts/   # Output directory
+├── history/            # Generation history
+└── uploads/           # Temporary uploads
+```
 
-#### CPU Optimization
-- **Thread Count**: Application automatically uses available CPU cores
-- **Memory Management**: Close unnecessary applications
-- **Image Preprocessing**: Resize large images before processing
+## 🔧 Advanced Features
 
-#### Storage Optimization
-- **Cleanup**: Enable auto-cleanup in settings
-- **Export Management**: Regularly archive old exports
-- **Cache Management**: Clear model cache if disk space is limited
+### Custom Actions
+Enhance your prompts with specific actions:
+- "waves hello" - Adds greeting gesture
+- "starts dancing" - Incorporates dance movements
+- "looks around" - Adds environmental awareness
+- "adjusts clothing" - Includes wardrobe interactions
 
-## 🤝 Contributing & Development
+### Batch Processing
+- Upload multiple images at once
+- Consistent settings across all images
+- CSV export with all results
+- Progress tracking and error handling
 
-We welcome contributions from the community! Whether you're fixing bugs, adding features, or improving documentation, your help is appreciated.
+### Fallback System
+- Automatic provider switching on failure
+- Graceful degradation to local models
+- Comprehensive error reporting
+- Ensures 100% analysis success rate
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**API Analysis Fails**
+- Check your API keys in Settings
+- Verify internet connection
+- Ensure API quota is available
+- Enable fallback for automatic recovery
+
+**Slow Processing**
+- Large images take longer to process
+- API providers may have rate limits
+- Local BLIP processing depends on hardware
+
+**Installation Issues**
+- Ensure Python 3.8+ is installed
+- Use virtual environment to avoid conflicts
+- Check CUDA installation for GPU acceleration
+
+### Error Messages
+
+| Error | Solution |
+|-------|----------|
+| "OpenAI API key required" | Add valid API key in Settings |
+| "Google AI analysis failed" | Check API key and quota |
+| "BLIP model loading failed" | Restart application, check disk space |
+| "Image format not supported" | Use JPG, PNG, or WebP formats |
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our contributing guidelines:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ### Development Setup
-
 ```bash
-# Clone repository
-git clone https://github.com/Valorking6/framepack-generator-pro.git
-cd framepack-generator-pro
-
-# Create development environment
-python -m venv dev-env
-source dev-env/bin/activate  # Windows: dev-env\Scripts\activate
-
-# Install in development mode
-pip install -e .
-
 # Install development dependencies
-pip install pytest black flake8 mypy pre-commit
-
-# Set up pre-commit hooks
-pre-commit install
+pip install -r requirements.txt
+pip install pytest black flake8
 
 # Run tests
-pytest tests/ -v
+pytest
+
+# Format code
+black .
+
+# Lint code
+flake8 .
 ```
 
-### Code Style & Standards
+## 📄 License
 
-- **Formatting**: Use `black` for code formatting
-- **Linting**: Follow `flake8` guidelines
-- **Type Hints**: Use `mypy` for type checking
-- **Documentation**: Maintain comprehensive docstrings
-- **Testing**: Write tests for new features
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-### Contribution Guidelines
+## 🙏 Acknowledgments
 
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Commit** changes: `git commit -m 'Add amazing feature'`
-4. **Push** to branch: `git push origin feature/amazing-feature`
-5. **Open** a Pull Request
+- **Salesforce BLIP** - Local image captioning model
+- **OpenAI** - GPT-4 Vision API
+- **Google** - Gemini Vision API
+- **Gradio** - Web interface framework
+- **Hugging Face** - Transformers library
 
-### Reporting Issues
+## 📞 Support
 
-When reporting issues, please include:
-- **System Information**: OS, Python version, GPU details
-- **Error Messages**: Complete error logs and stack traces
-- **Reproduction Steps**: Clear steps to reproduce the issue
-- **Expected Behavior**: What you expected to happen
-- **Screenshots**: Visual evidence when applicable
+For support, please:
+1. Check the troubleshooting section
+2. Search existing issues
+3. Create a new issue with detailed information
+4. Join our community discussions
 
-## 📄 License & Legal
+## 🔮 Roadmap
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+### Upcoming Features
+- [ ] Video analysis support
+- [ ] More AI provider integrations
+- [ ] Advanced prompt templates
+- [ ] API rate limiting management
+- [ ] Cloud deployment options
+- [ ] Mobile-responsive interface
 
-### Third-Party Licenses
-- **BLIP Model**: Salesforce Research License
-- **Gradio**: Apache License 2.0
-- **OpenCV**: Apache License 2.0
-- **PyTorch**: BSD License
+### Version History
 
-## 🙏 Acknowledgments & Credits
+**v1.1.0** (Current)
+- ✅ Multi-provider AI support (OpenAI, Google AI)
+- ✅ Intelligent fallback system
+- ✅ Enhanced UI with provider status
+- ✅ Comprehensive settings management
+- ✅ Batch processing improvements
 
-### AI Models & Research
-- **Salesforce Research**: For the excellent BLIP image captioning model
-- **Hugging Face**: For the transformers library and model hosting infrastructure
-- **OpenAI**: For inspiration in AI-powered content generation
-
-### Open Source Libraries
-- **Gradio Team**: For the intuitive web interface framework
-- **OpenCV Contributors**: For comprehensive computer vision capabilities
-- **PyTorch Team**: For the robust deep learning framework
-- **scikit-learn**: For machine learning utilities
-
-### Community
-- **Content Creator Community**: For feedback, testing, and feature requests
-- **AI Research Community**: For advancing the field of computer vision
-- **Open Source Contributors**: For making this project possible
-
-## 📞 Support & Community
-
-### Documentation & Resources
-- **📚 Wiki**: [Comprehensive Documentation](https://github.com/Valorking6/framepack-generator-pro/wiki)
-- **🎥 Video Tutorials**: [YouTube Playlist](https://youtube.com/playlist?list=framepack-tutorials)
-- **📖 API Documentation**: [API Reference](https://github.com/Valorking6/framepack-generator-pro/docs/api)
-
-### Community Channels
-- **💬 Discussions**: [GitHub Discussions](https://github.com/Valorking6/framepack-generator-pro/discussions)
-- **🐛 Issues**: [Bug Reports & Feature Requests](https://github.com/Valorking6/framepack-generator-pro/issues)
-- **💡 Ideas**: [Feature Suggestions](https://github.com/Valorking6/framepack-generator-pro/discussions/categories/ideas)
-
-### Professional Support
-- **📧 Email**: support@framepack-generator-pro.com
-- **💼 Enterprise**: enterprise@framepack-generator-pro.com
-- **🎓 Education**: education@framepack-generator-pro.com
-
-## 🗺️ Roadmap & Future Development
-
-### Version 1.1 (Q3 2025)
-- [ ] **Video Preview Generation**: Real-time video preview from prompts
-- [ ] **Advanced Camera Controls**: Manual camera movement customization
-- [ ] **Style Transfer**: Apply artistic styles to generated prompts
-- [ ] **Prompt Templates**: Pre-built templates for common scenarios
-
-### Version 1.2 (Q4 2025)
-- [ ] **Custom Model Training**: Train models on user-specific content
-- [ ] **Multi-language Support**: Internationalization for global users
-- [ ] **Cloud Integration**: Cloud-based processing and storage
-- [ ] **Collaboration Tools**: Team sharing and project management
-
-### Version 1.3 (Q1 2026)
-- [ ] **API Endpoints**: RESTful API for integration with other tools
-- [ ] **Plugin System**: Extensible architecture for third-party plugins
-- [ ] **Mobile App**: Native mobile applications for iOS and Android
-- [ ] **Real-time Collaboration**: Live editing and sharing capabilities
-
-### Version 1.4 (Q2 2026)
-- [ ] **Advanced AI Models**: Integration with latest vision-language models
-- [ ] **3D Scene Understanding**: Support for 3D scene analysis
-- [ ] **Voice Integration**: Voice commands and audio prompt generation
-- [ ] **AR/VR Support**: Extended reality content creation tools
-
-### Long-term Vision
-- **AI Director**: Fully autonomous video direction and editing
-- **Industry Integration**: Direct integration with major video platforms
-- **Educational Platform**: Comprehensive learning resources and certification
-- **Enterprise Solutions**: Large-scale deployment and management tools
+**v1.0.0**
+- ✅ Initial release with BLIP support
+- ✅ Basic prompt generation
+- ✅ Gradio web interface
 
 ---
 
-<div align="center">
+**Made with ❤️ for content creators and AI enthusiasts**
 
-**🎬 Transform Your Images Into Cinematic Video Prompts**
-
-*Made with ❤️ for content creators worldwide*
-
-[![GitHub Stars](https://img.shields.io/github/stars/Valorking6/framepack-generator-pro?style=social)](https://github.com/Valorking6/framepack-generator-pro/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/Valorking6/framepack-generator-pro?style=social)](https://github.com/Valorking6/framepack-generator-pro/network/members)
-[![GitHub Issues](https://img.shields.io/github/issues/Valorking6/framepack-generator-pro)](https://github.com/Valorking6/framepack-generator-pro/issues)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-[⭐ Star this project](https://github.com/Valorking6/framepack-generator-pro) • [🐛 Report Bug](https://github.com/Valorking6/framepack-generator-pro/issues) • [💡 Request Feature](https://github.com/Valorking6/framepack-generator-pro/discussions)
-
-</div>
+*Transform your creative vision into compelling video prompts with the power of AI*
