@@ -1,0 +1,41 @@
+{
+  "app": {
+    "name": "Framepack Generator Pro",
+    "version": "1.0.0",
+    "debug": false,
+    "host": "0.0.0.0",
+    "port": 8000
+  },
+  "ai_services": {
+    "openai": {
+      "api_key": "your-openai-api-key-here",
+      "model": "gpt-4-vision-preview",
+      "max_tokens": 1000
+    },
+    "huggingface": {
+      "api_key": "your-huggingface-api-key-here",
+      "model": "Salesforce/blip-image-captioning-large"
+    }
+  },
+  "image_processing": {
+    "max_file_size": 10485760,
+    "allowed_formats": ["jpg", "jpeg", "png", "webp"],
+    "max_width": 2048,
+    "max_height": 2048
+  },
+  "prompt_generation": {
+    "default_template": "standard",
+    "max_prompt_length": 500,
+    "include_technical_details": true,
+    "style_variations": 3
+  },
+  "storage": {
+    "upload_path": "./uploads",
+    "output_path": "./output",
+    "temp_path": "./temp"
+  },
+  "security": {
+    "cors_origins": ["http://localhost:3000", "http://127.0.0.1:3000"],
+    "max_requests_per_minute": 60
+  }
+}
