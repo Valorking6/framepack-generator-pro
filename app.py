@@ -276,7 +276,7 @@ class FramepackGeneratorPro:
         
         summary = f"Processed {len(results)} images successfully.\n\n"
         for result in results[:5]:  # Show first 5 results
-            summary += f"**{result['filename']}** ({result['analysis_provider']}): \n{result['timestamp_prompt'][:100]}...\n\n"
+            summary += f"**{result['filename']}** ({result['analysis_provider']}):\n{result['timestamp_prompt'][:100]}...\n\n"
         
         if len(results) > 5:
             summary += f"... and {len(results) - 5} more images."

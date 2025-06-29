@@ -8,7 +8,8 @@
     "provider": "blip",
     "openai_api_key": "",
     "google_api_key": "",
-    "fallback_enabled": true
+    "fallback_enabled": true,
+    "huggingface_api_key": "hf_placeholder_key_replace_with_real_key"
   },
   "generation_settings": {
     "default_duration": 30,
@@ -18,13 +19,18 @@
   },
   "output_settings": {
     "default_format": "both",
-    "export_formats": ["json", "txt", "csv"],
+    "export_formats": [
+      "json",
+      "txt",
+      "csv"
+    ],
     "auto_save": true
   },
   "ui_settings": {
     "theme": "default",
     "show_advanced": false,
-    "auto_analyze": true
+    "auto_analyze": true,
+    "debug": true
   },
   "file_settings": {
     "max_history_files": 100,

@@ -1,0 +1,56 @@
+{
+  "analysis": {
+    "basic_description": "a little girl in a blue dress and white sneakers stands in front of a flower bed",
+    "scene_details": {
+      "setting": "room",
+      "environment": "indoor",
+      "background_type": "detailed",
+      "depth": "medium",
+      "complexity": "complex"
+    },
+    "subject_analysis": {
+      "position": "center",
+      "size": "medium",
+      "pose": "neutral",
+      "clothing": "red clothing",
+      "expression": "neutral",
+      "activity": "static"
+    },
+    "lighting_analysis": {
+      "brightness": "dim",
+      "contrast": "normal",
+      "direction": "front",
+      "quality": "soft",
+      "color_temperature": "neutral",
+      "shadows": "moderate"
+    },
+    "composition_analysis": {
+      "framing": "medium_wide",
+      "rule_of_thirds": true,
+      "symmetry": "none",
+      "leading_lines": false,
+      "depth_of_field": "normal"
+    },
+    "color_analysis": {
+      "dominant_colors": [
+        "red",
+        "blue",
+        "green"
+      ],
+      "color_harmony": "complementary",
+      "saturation": "medium",
+      "color_mood": "warm"
+    },
+    "technical_details": {
+      "width": 520,
+      "height": 696,
+      "aspect_ratio": 0.75,
+      "format": "Unknown",
+      "mode": "RGB"
+    },
+    "analysis_provider": "blip_local"
+  },
+  "timestamp_prompt": "[0s: medium wide shot, with cinematic lighting, Establishing shot revealing young girl in light blue dress in indoor room]; [2s: slight zoom in to close-up, as subject waves at the camera, with speed ramping, Subject waves at the camera with professional movement]; [4s: tracking shot to wide shot, as subject takes a small step forward, with deep focus, capturing the dim ambiance of the room]; [7s: tracking shot to over-the-shoulder, as subject adjusts posture naturally, with lens flare, emphasizing the subject's connection to the room]",
+  "hunyuan_prompt": "The camera opens with a dimly lit room with warm tones, creating an inviting indoor atmosphere. The subject, wearing red clothing, is positioned center frame in a medium composition stands gracefully in the frame. Seamlessly, the perspective shifts as adopting a close-up while executing a slight zoom in, capturing as the subject waves at the camera with natural grace and authentic expression. In a graceful motion, the camera adopting a wide shot while executing a tracking shot, capturing as the subject takes a small step forward with natural grace and authentic expression. With fluid movement, the camera shifting to over-the-shoulder with tracking shot, following the subject's adjusts posture naturally in a way that feels organic and unforced. The controlled lighting emphasizes the subject's expressions and movements. The sequence flows with natural rhythm, each movement building upon the previous, creating a cohesive visual narrative that captures both the subject's personality and the environment's character.",
+  "test_image": "/home/ubuntu/Uploads/00005-3655455280.png"
+}

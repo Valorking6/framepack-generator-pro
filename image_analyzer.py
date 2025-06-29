@@ -118,6 +118,11 @@ class ImageAnalyzer:
                 analysis = self._analyze_with_google(image, analysis)
             elif provider == "huggingface" and self.huggingface_api_key:
                 analysis = self._analyze_with_huggingface(image, analysis)
+            elif provider == "blip":
+                # Use local BLIP model directly
+                analysis["basic_description"] = self._get_basic_description(image)
+                analysis["analysis_provider"] = "blip_local"
+                print("✅ Using BLIP local analysis")
             else:
                 # Fallback to BLIP or try other providers
                 analysis = self._analyze_with_fallback(image, analysis, provider)
@@ -219,27 +224,51 @@ class ImageAnalyzer:
             # Convert image to base64
             buffered = io.BytesIO()
             image.save(buffered, format="JPEG")
-            img_str = base64.b64encode(buffered.getvalue()).decode()
+            img_bytes = buffered.getvalue()
             
-            # Use Hugging Face Inference API for image captioning
-            API_URL = "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large"
-            headers = {"Authorization": f"Bearer {self.huggingface_api_key}"}
+            # Use the more reliable BLIP base model endpoint
+            API_URL = "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base"
+            headers = {
+                "Authorization": f"Bearer {self.huggingface_api_key}",
+                "Content-Type": "application/octet-stream",
+                "x-wait-for-model": "true"  # Wait for model to load if cold
+            }
             
-            # Send image data
-            response = requests.post(API_URL, headers=headers, data=buffered.getvalue())
+            # Send image data as binary
+            response = requests.post(API_URL, headers=headers, data=img_bytes)
             
             if response.status_code == 200:
                 result = response.json()
                 if isinstance(result, list) and len(result) > 0:
                     description = result[0].get("generated_text", "A scene with various elements")
+                elif isinstance(result, dict) and "generated_text" in result:
+                    description = result["generated_text"]
                 else:
                     description = "A scene with various elements"
                 
                 analysis["basic_description"] = description
-                analysis["analysis_provider"] = "huggingface_blip_large"
+                analysis["analysis_provider"] = "huggingface_blip_base"
                 print("✅ Hugging Face BLIP analysis completed")
+            elif response.status_code == 503:
+                print("❌ Hugging Face model is loading, retrying...")
+                # Wait a moment and try again
+                import time
+                time.sleep(2)
+                response = requests.post(API_URL, headers=headers, data=img_bytes)
+                if response.status_code == 200:
+                    result = response.json()
+                    if isinstance(result, list) and len(result) > 0:
+                        description = result[0].get("generated_text", "A scene with various elements")
+                    else:
+                        description = "A scene with various elements"
+                    analysis["basic_description"] = description
+                    analysis["analysis_provider"] = "huggingface_blip_base"
+                    print("✅ Hugging Face BLIP analysis completed after retry")
+                else:
+                    raise Exception(f"API returned status code {response.status_code} after retry")
             else:
                 print(f"❌ Hugging Face API error: {response.status_code}")
+                print(f"Response: {response.text}")
                 raise Exception(f"API returned status code {response.status_code}")
             
         except Exception as e:

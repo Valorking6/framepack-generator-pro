@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 # Framepack Generator Pro - Linux/macOS Installation Script
