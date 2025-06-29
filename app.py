@@ -1,3 +1,4 @@
+
 import gradio as gr
 import json
 import os
@@ -18,7 +19,10 @@ class FramepackGeneratorPro:
         self.prompt_generator = PromptGenerator()
         
     def load_settings(self):
-        """Load application settings"""
+        """Load application settings with config.json integration"""
+        # First try to load from config.json (new config system)
+        config_settings = self.load_config_file()
+        
         default_settings = {
             "model_settings": {
                 "blip_model": "Salesforce/blip-image-captioning-base",
@@ -29,6 +33,7 @@ class FramepackGeneratorPro:
                 "provider": "blip",
                 "openai_api_key": "",
                 "google_api_key": "",
+                "huggingface_api_key": "",
                 "fallback_enabled": True
             },
             "generation_settings": {
@@ -54,6 +59,25 @@ class FramepackGeneratorPro:
             }
         }
         
+        # Merge config settings with defaults
+        if config_settings:
+            # Map config.json structure to app settings
+            if "ai_services" in config_settings:
+                ai_services = config_settings["ai_services"]
+                if "openai" in ai_services:
+                    default_settings["api_settings"]["openai_api_key"] = ai_services["openai"].get("api_key", "")
+                if "huggingface" in ai_services:
+                    default_settings["api_settings"]["huggingface_api_key"] = ai_services["huggingface"].get("api_key", "")
+                    default_settings["model_settings"]["blip_model"] = ai_services["huggingface"].get("model", "Salesforce/blip-image-captioning-base")
+            
+            if "prompt_generation" in config_settings:
+                prompt_config = config_settings["prompt_generation"]
+                default_settings["generation_settings"]["default_duration"] = prompt_config.get("max_prompt_length", 30) // 10  # rough conversion
+            
+            if "app" in config_settings:
+                app_config = config_settings["app"]
+                default_settings["ui_settings"]["debug"] = app_config.get("debug", False)
+        
         if os.path.exists("settings.json"):
             try:
                 with open("settings.json", "r") as f:
@@ -71,6 +95,23 @@ class FramepackGeneratorPro:
                 print(f"Error loading settings: {e}")
         return default_settings
     
+    def load_config_file(self):
+        """Load configuration from config.json file"""
+        config_paths = ["config.json", "config.example.json", "/home/ubuntu/Uploads/config.example.json"]
+        
+        for config_path in config_paths:
+            if os.path.exists(config_path):
+                try:
+                    with open(config_path, "r") as f:
+                        config = json.load(f)
+                        print(f"✅ Loaded configuration from {config_path}")
+                        return config
+                except Exception as e:
+                    print(f"❌ Error loading config from {config_path}: {e}")
+        
+        print("ℹ️ No config file found, using defaults")
+        return None
+    
     def save_settings(self, settings):
         """Save application settings"""
         with open("settings.json", "w") as f:
@@ -79,11 +120,12 @@ class FramepackGeneratorPro:
         self.settings = settings
         self.image_analyzer.update_settings(settings)
     
-    def update_api_settings(self, provider, openai_key, google_key, fallback_enabled):
+    def update_api_settings(self, provider, openai_key, google_key, huggingface_key, fallback_enabled):
         """Update API settings and reinitialize analyzers"""
         self.settings["api_settings"]["provider"] = provider
         self.settings["api_settings"]["openai_api_key"] = openai_key
         self.settings["api_settings"]["google_api_key"] = google_key
+        self.settings["api_settings"]["huggingface_api_key"] = huggingface_key
         self.settings["api_settings"]["fallback_enabled"] = fallback_enabled
         
         self.save_settings(self.settings)
@@ -94,6 +136,8 @@ class FramepackGeneratorPro:
             status_messages.append("⚠️ OpenAI API key is required for OpenAI provider")
         elif provider == "google" and not google_key:
             status_messages.append("⚠️ Google AI API key is required for Google AI provider")
+        elif provider == "huggingface" and not huggingface_key:
+            status_messages.append("⚠️ Hugging Face API key is required for Hugging Face provider")
         
         if not status_messages:
             status_messages.append("✅ API settings updated successfully!")
@@ -109,6 +153,15 @@ class FramepackGeneratorPro:
             # Analyze the uploaded image
             analysis = self.image_analyzer.analyze_image(image)
             
+            # Add debugging information
+            debug_info = ""
+            if self.settings.get("ui_settings", {}).get("debug", False):
+                debug_info = f"**🔍 Debug Info:**\n"
+                debug_info += f"- Basic Description: {analysis.get('basic_description', 'None')[:100]}...\n"
+                debug_info += f"- Scene: {analysis.get('scene_details', {}).get('setting', 'unknown')} ({analysis.get('scene_details', {}).get('environment', 'unknown')})\n"
+                debug_info += f"- Subject: {analysis.get('subject_analysis', {}).get('clothing', 'unknown')} at {analysis.get('subject_analysis', {}).get('position', 'unknown')}\n"
+                debug_info += f"- Lighting: {analysis.get('lighting_analysis', {}).get('brightness', 'unknown')} with {analysis.get('lighting_analysis', {}).get('color_temperature', 'unknown')} temperature\n\n"
+            
             # Generate prompts based on analysis
             timestamp_prompt, hunyuan_prompt = self.prompt_generator.generate_prompts(
                 analysis, duration, custom_action
@@ -116,6 +169,7 @@ class FramepackGeneratorPro:
             
             # Add provider info to output
             provider_info = f"**Analysis Provider:** {analysis.get('analysis_provider', 'unknown')}\n\n"
+            provider_info += debug_info
             
             # Format output based on user preference
             if output_format == "Timestamp Only":
@@ -222,7 +276,7 @@ class FramepackGeneratorPro:
         
         summary = f"Processed {len(results)} images successfully.\n\n"
         for result in results[:5]:  # Show first 5 results
-            summary += f"**{result['filename']}** ({result['analysis_provider']}):  \n{result['timestamp_prompt'][:100]}...\n\n"
+            summary += f"**{result['filename']}** ({result['analysis_provider']}): \n{result['timestamp_prompt'][:100]}...\n\n"
         
         if len(results) > 5:
             summary += f"... and {len(results) - 5} more images."
@@ -389,7 +443,7 @@ def create_interface():
                         gr.HTML('<div class="api-box"><h4>🤖 AI Provider Settings</h4></div>')
                         
                         api_provider = gr.Radio(
-                            choices=["blip", "openai", "google"],
+                            choices=["blip", "openai", "google", "huggingface"],
                             value=app.settings["api_settings"]["provider"],
                             label="AI Analysis Provider",
                             info="Choose your preferred AI provider for image analysis"
@@ -409,6 +463,14 @@ def create_interface():
                             placeholder="AI...",
                             value=app.settings["api_settings"]["google_api_key"],
                             info="Get your key at: https://aistudio.google.com/apikey"
+                        )
+                        
+                        huggingface_api_key = gr.Textbox(
+                            label="Hugging Face API Key",
+                            type="password",
+                            placeholder="hf_...",
+                            value=app.settings["api_settings"]["huggingface_api_key"],
+                            info="Get your key at: https://huggingface.co/settings/tokens"
                         )
                         
                         fallback_enabled = gr.Checkbox(
@@ -444,6 +506,12 @@ def create_interface():
                             label="BLIP Model (Fallback)"
                         )
                         
+                        debug_mode = gr.Checkbox(
+                            label="Enable Debug Mode",
+                            value=app.settings.get("ui_settings", {}).get("debug", False),
+                            info="Show detailed analysis information in prompt output"
+                        )
+                        
                         save_general_btn = gr.Button("💾 Save General Settings")
                         general_status = gr.HTML()
                     
@@ -470,6 +538,16 @@ def create_interface():
                                 <li>Paste it in the Google AI API Key field above</li>
                             </ol>
                             
+                            <h5>Hugging Face API Key:</h5>
+                            <ol>
+                                <li>Visit <a href="https://huggingface.co/settings/tokens" target="_blank">Hugging Face Tokens</a></li>
+                                <li>Sign in to your Hugging Face account</li>
+                                <li>Click "New token"</li>
+                                <li>Choose "Read" access and create token</li>
+                                <li>Copy the token (starts with "hf_")</li>
+                                <li>Paste it in the Hugging Face API Key field above</li>
+                            </ol>
+                            
                             <p><strong>Note:</strong> API keys are stored locally and used only for image analysis. Keep them secure!</p>
                         </div>
                         """)
@@ -487,26 +565,27 @@ def create_interface():
                         """)
                 
                 # API Settings Save Function
-                def save_api_settings_fn(provider, openai_key, google_key, fallback):
-                    return app.update_api_settings(provider, openai_key, google_key, fallback)
+                def save_api_settings_fn(provider, openai_key, google_key, hf_key, fallback):
+                    return app.update_api_settings(provider, openai_key, google_key, hf_key, fallback)
                 
                 save_api_btn.click(
                     fn=save_api_settings_fn,
-                    inputs=[api_provider, openai_api_key, google_api_key, fallback_enabled],
+                    inputs=[api_provider, openai_api_key, google_api_key, huggingface_api_key, fallback_enabled],
                     outputs=[api_status]
                 )
                 
                 # General Settings Save Function
-                def save_general_settings_fn(duration, fps, model):
+                def save_general_settings_fn(duration, fps, model, debug):
                     app.settings["generation_settings"]["default_duration"] = duration
                     app.settings["generation_settings"]["default_fps"] = fps
                     app.settings["model_settings"]["blip_model"] = model
+                    app.settings["ui_settings"]["debug"] = debug
                     app.save_settings(app.settings)
                     return "✅ General settings saved successfully!"
                 
                 save_general_btn.click(
                     fn=save_general_settings_fn,
-                    inputs=[settings_duration, settings_fps, settings_model],
+                    inputs=[settings_duration, settings_fps, settings_model, debug_mode],
                     outputs=[general_status]
                 )
             
@@ -544,6 +623,7 @@ def create_interface():
                     <ul>
                         <li><strong>OpenAI GPT-4 Vision:</strong> Excellent detail and context understanding</li>
                         <li><strong>Google Gemini Vision:</strong> Fast processing and good multimodal reasoning</li>
+                        <li><strong>Hugging Face BLIP:</strong> Cloud-based BLIP model with better accuracy than local</li>
                         <li><strong>BLIP Local:</strong> Free, works offline, basic but reliable descriptions</li>
                     </ul>
                     

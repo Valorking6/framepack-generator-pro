@@ -23,6 +23,12 @@ try:
 except ImportError:
     GOOGLE_AI_AVAILABLE = False
 
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+
 class ImageAnalyzer:
     def __init__(self, settings: Dict = None):
         """Initialize the image analyzer with BLIP and API models"""
@@ -45,7 +51,7 @@ class ImageAnalyzer:
         self._init_api_clients()
     
     def _init_api_clients(self):
-        """Initialize OpenAI and Google AI clients"""
+        """Initialize OpenAI, Google AI, and Hugging Face clients"""
         api_settings = self.settings.get("api_settings", {})
         
         # Initialize OpenAI client
@@ -66,6 +72,13 @@ class ImageAnalyzer:
                 print("✅ Google AI client initialized")
             except Exception as e:
                 print(f"❌ Error initializing Google AI client: {e}")
+        
+        # Initialize Hugging Face client
+        self.huggingface_api_key = api_settings.get("huggingface_api_key")
+        if self.huggingface_api_key and REQUESTS_AVAILABLE:
+            print("✅ Hugging Face API key configured")
+        elif api_settings.get("huggingface_api_key"):
+            print("❌ Requests library not available for Hugging Face API")
     
     def update_settings(self, settings: Dict):
         """Update settings and reinitialize API clients"""
@@ -103,6 +116,8 @@ class ImageAnalyzer:
                 analysis = self._analyze_with_openai(image, analysis)
             elif provider == "google" and self.google_client:
                 analysis = self._analyze_with_google(image, analysis)
+            elif provider == "huggingface" and self.huggingface_api_key:
+                analysis = self._analyze_with_huggingface(image, analysis)
             else:
                 # Fallback to BLIP or try other providers
                 analysis = self._analyze_with_fallback(image, analysis, provider)
@@ -198,6 +213,41 @@ class ImageAnalyzer:
         
         return analysis
     
+    def _analyze_with_huggingface(self, image: Image.Image, analysis: Dict) -> Dict:
+        """Analyze image using Hugging Face API"""
+        try:
+            # Convert image to base64
+            buffered = io.BytesIO()
+            image.save(buffered, format="JPEG")
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+            
+            # Use Hugging Face Inference API for image captioning
+            API_URL = "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large"
+            headers = {"Authorization": f"Bearer {self.huggingface_api_key}"}
+            
+            # Send image data
+            response = requests.post(API_URL, headers=headers, data=buffered.getvalue())
+            
+            if response.status_code == 200:
+                result = response.json()
+                if isinstance(result, list) and len(result) > 0:
+                    description = result[0].get("generated_text", "A scene with various elements")
+                else:
+                    description = "A scene with various elements"
+                
+                analysis["basic_description"] = description
+                analysis["analysis_provider"] = "huggingface_blip_large"
+                print("✅ Hugging Face BLIP analysis completed")
+            else:
+                print(f"❌ Hugging Face API error: {response.status_code}")
+                raise Exception(f"API returned status code {response.status_code}")
+            
+        except Exception as e:
+            print(f"❌ Hugging Face analysis failed: {e}")
+            raise e
+        
+        return analysis
+    
     def _analyze_with_fallback(self, image: Image.Image, analysis: Dict, preferred_provider: str) -> Dict:
         """Try fallback providers or BLIP if APIs fail"""
         fallback_enabled = self.settings.get("api_settings", {}).get("fallback_enabled", True)
@@ -215,6 +265,12 @@ class ImageAnalyzer:
                     return self._analyze_with_google(image, analysis)
                 except Exception as e:
                     print(f"Google AI fallback failed: {e}")
+            
+            if preferred_provider != "huggingface" and self.huggingface_api_key:
+                try:
+                    return self._analyze_with_huggingface(image, analysis)
+                except Exception as e:
+                    print(f"Hugging Face fallback failed: {e}")
         
         # Final fallback to BLIP
         analysis["basic_description"] = self._get_basic_description(image)
