@@ -106,7 +106,7 @@ try {
 # Install PyTorch with CUDA 12.8 support if available
 if ($cudaAvailable) {
     Write-Host "Installing PyTorch with CUDA 12.8 support..." -ForegroundColor Yellow
-    pip install --pre torch==2.8.0.dev20250324+cu128 torchvision==0.22.0.dev20250325+cu128 torchaudio==2.6.0.dev20250325+cu128 --index-url https://download.pytorch.org/whl/nightly/cu128
+    pip install --pre torch==2.8.0.dev20250324+cu128 torchvision==0.22.0.dev20250325+cu128 torchaudio==2.6.0.dev20250325+cu128 --index-url https://download.pytorch.org/whl/cu128
     
     if ($LASTEXITCODE -ne 0) {
         Write-Host "⚠️  CUDA installation failed, falling back to CPU version..." -ForegroundColor Yellow
