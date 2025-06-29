@@ -1,3 +1,4 @@
+
 import random
 import json
 from typing import Dict, List, Tuple
@@ -67,6 +68,12 @@ class PromptGenerator:
         subject = analysis.get("subject_analysis", {})
         lighting = analysis.get("lighting_analysis", {})
         composition = analysis.get("composition_analysis", {})
+        colors = analysis.get("color_analysis", {})
+        basic_desc = analysis.get("basic_description", "")
+        
+        # Use basic description to inform scene understanding
+        scene_context = self._extract_scene_context(basic_desc, scene)
+        subject_context = self._extract_subject_context(basic_desc, subject)
         
         # Opening shot (0-2 seconds)
         opening_shot = {
@@ -75,8 +82,10 @@ class PromptGenerator:
             "camera_angle": self._select_opening_shot(composition),
             "camera_movement": "static",
             "subject_action": "static pose",
-            "description": f"Establishing shot revealing {subject.get('clothing', 'person')} in {scene.get('setting', 'scene')}",
-            "effects": self._select_effects_for_mood(lighting)
+            "description": f"Establishing shot revealing {subject_context} in {scene_context}",
+            "effects": self._select_effects_for_mood(lighting),
+            "scene_context": scene_context,
+            "subject_context": subject_context
         }
         sequence.append(opening_shot)
         current_time = 2
@@ -344,3 +353,68 @@ class PromptGenerator:
         ]
         
         return random.choice(descriptions)
+    
+    def _extract_scene_context(self, basic_desc: str, scene: Dict) -> str:
+        """Extract scene context from basic description and analysis"""
+        desc_lower = basic_desc.lower()
+        
+        # Try to extract specific scene elements from description
+        if any(word in desc_lower for word in ["outdoor", "outside", "park", "garden", "street", "nature"]):
+            return f"outdoor {scene.get('setting', 'environment')}"
+        elif any(word in desc_lower for word in ["indoor", "inside", "room", "office", "home", "building"]):
+            return f"indoor {scene.get('setting', 'space')}"
+        elif any(word in desc_lower for word in ["kitchen", "bedroom", "living room", "bathroom"]):
+            room_type = next((word for word in ["kitchen", "bedroom", "living room", "bathroom"] if word in desc_lower), "room")
+            return f"{room_type} setting"
+        elif any(word in desc_lower for word in ["beach", "ocean", "water", "lake"]):
+            return "waterfront location"
+        elif any(word in desc_lower for word in ["mountain", "hill", "forest", "tree"]):
+            return "natural landscape"
+        else:
+            # Fallback to analysis or generic
+            setting = scene.get("setting", "scene")
+            environment = scene.get("environment", "space")
+            return f"{environment} {setting}"
+    
+    def _extract_subject_context(self, basic_desc: str, subject: Dict) -> str:
+        """Extract subject context from basic description and analysis"""
+        desc_lower = basic_desc.lower()
+        
+        # Try to extract specific subject details from description
+        if any(word in desc_lower for word in ["woman", "girl", "female", "lady"]):
+            subject_type = "woman"
+        elif any(word in desc_lower for word in ["man", "boy", "male", "guy"]):
+            subject_type = "man"
+        elif any(word in desc_lower for word in ["child", "kid", "baby"]):
+            subject_type = "child"
+        elif any(word in desc_lower for word in ["person", "people", "individual"]):
+            subject_type = "person"
+        else:
+            subject_type = "subject"
+        
+        # Extract clothing or appearance details
+        clothing_details = []
+        if any(word in desc_lower for word in ["wearing", "dressed", "shirt", "dress", "jacket", "coat"]):
+            # Try to extract clothing colors or types
+            if "red" in desc_lower:
+                clothing_details.append("red clothing")
+            elif "blue" in desc_lower:
+                clothing_details.append("blue clothing")
+            elif "white" in desc_lower:
+                clothing_details.append("white clothing")
+            elif "black" in desc_lower:
+                clothing_details.append("black clothing")
+            elif any(word in desc_lower for word in ["shirt", "t-shirt", "blouse"]):
+                clothing_details.append("casual shirt")
+            elif any(word in desc_lower for word in ["dress", "gown"]):
+                clothing_details.append("dress")
+            elif any(word in desc_lower for word in ["suit", "formal"]):
+                clothing_details.append("formal attire")
+        
+        # Combine subject type with clothing details
+        if clothing_details:
+            return f"{subject_type} in {clothing_details[0]}"
+        else:
+            # Fallback to analysis
+            clothing = subject.get("clothing", "casual attire")
+            return f"{subject_type} in {clothing}"
