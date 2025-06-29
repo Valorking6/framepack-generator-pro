@@ -1,0 +1,28 @@
+{
+  "model_settings": {
+    "blip_model": "Salesforce/blip-image-captioning-base",
+    "device": "auto",
+    "max_length": 50
+  },
+  "generation_settings": {
+    "default_duration": 30,
+    "default_fps": 30,
+    "min_duration": 5,
+    "max_duration": 120
+  },
+  "output_settings": {
+    "default_format": "both",
+    "export_formats": ["json", "txt", "csv"],
+    "auto_save": true
+  },
+  "ui_settings": {
+    "theme": "default",
+    "show_advanced": false,
+    "auto_analyze": true
+  },
+  "file_settings": {
+    "max_history_files": 100,
+    "max_export_files": 50,
+    "auto_cleanup": true
+  }
+}
